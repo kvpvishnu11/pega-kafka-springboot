@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Details</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        input[type="text"], input[type="submit"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        input[type="text"]:read-only {
+            background-color: #f0f0f0;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <form id="vendorForm" onsubmit="submitForm(); return false;">
+        <label for="vendorSelect">Select Vendor:</label><br>
+        <select id="vendorSelect" onchange="getVendorDetails()">
+            <option value="">Select a Vendor ID</option>
+        </select><br><br>
+        <label for="vendorId">Vendor ID:</label><br>
+        <input type="text" id="vendorId" name="VendorId" readonly><br>
+        <label for="vendorName">Vendor Name:</label><br>
+        <input type="text" id="vendorName" name="VendorName"><br>
+        <label for="vendorCity">Vendor City:</label><br>
+        <input type="text" id="vendorCity" name="VendorCity"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        let vendorDetails = [];
+
+        // Function to fetch vendor IDs and populate dropdown
+        fetch("http://localhost:8080/vendor-api/list")
+            .then(response => response.json())
+            .then(data => {
+                const vendorSelect = document.getElementById("vendorSelect");
+                vendorDetails = data;
+                data.forEach(vendor => {
+                    const option = document.createElement("option");
+                    option.value = vendor.VendorId;
+                    option.textContent = vendor.VendorId;
+                    vendorSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error fetching vendor IDs:", error));
+
+        // Function to fetch vendor details when a vendor ID is selected
+        function getVendorDetails() {
+            var selectedVendorId = document.getElementById("vendorSelect").value;
+            if (selectedVendorId) {
+                const selectedVendor = vendorDetails.find(vendor => vendor.VendorId === selectedVendorId);
+                document.getElementById("vendorId").value = selectedVendor.VendorId;
+                document.getElementById("vendorName").value = selectedVendor.VendorName;
+                document.getElementById("vendorCity").value = selectedVendor.VendorCity;
+            }
+        }
+
+        // Function to submit form data
+        function submitForm() {
+            var form = document.getElementById("vendorForm");
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            xhr.open("PUT", "http://localhost:8080/vendor-api/update", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    alert("Vendor details updated successfully!");
+                } else {
+                    alert("Failed to update vendor details.");
+                }
+            };
+            xhr.send(JSON.stringify(Object.fromEntries(formData)));
+        }
+    </script>
+</body>
+</html>
